@@ -1,6 +1,4 @@
 #!/bin/bash
-cd ..
-
 set -e
 
 mkdir -p build
