@@ -6,6 +6,9 @@ set(CMAKE_CXX_STANDARD 17)
 # Add GLFW (already cloned into deps/)
 add_subdirectory(deps/glfw)
 
+# Add GLM (already cloned into deps/)
+add_subdirectory(deps/glm)
+
 # Add GLAD (header and glad.c manually copied)
 include_directories(deps/glad/include)
 include_directories(deps/KHR/include)
@@ -13,7 +16,7 @@ add_library(glad STATIC deps/glad/src/glad.c)
 
 # Executable
 add_executable(main src/main.cpp)
-target_link_libraries(main PRIVATE glad glfw)
+target_link_libraries(main PRIVATE glad glfw glm)
 
 # For Linux: link with OpenGL and X11 dependencies
 if(UNIX)
