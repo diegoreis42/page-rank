@@ -20,7 +20,7 @@ Universe::Universe(Graph graph,
 }
 
 // Hooke's Law: F_spring = kx
-// Computes the force of n2 "pulling" on n1. Decress the force by 50%
+// Computes the force of n2 "pulling" on n1. Decress the force by 95%
 Vec3D Universe::compute_spring_force(Node n1, Node n2)
 {
     return spring_k * (n2.pos - n1.pos) * 0.05;

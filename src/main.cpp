@@ -127,7 +127,8 @@ void init_graph()
     for (int i = 0; i < graph.node_list.size(); i++)
     {
         std::unordered_set<int> visited;
-        std::function<void(int)> dfs = [&](int node) {
+        std::function<void(int)> dfs = [&](int node)
+        {
             visited.insert(node);
             for (int neighbor : graph.adj_list[node])
             {
@@ -171,18 +172,24 @@ void draw_graph(float yloc)
         }
     }
 
+    // Find max degree for normalization
+    int max_degree = 1;
+    for (const auto &node : universe.graph.node_list)
+    {
+        max_degree = std::max(max_degree, node.degree);
+    }
+
     for (int i = 0; i < n_nodes; i++)
     {
         Node nd = universe.graph.node_list[i];
 
         glm::mat4 model = glm::mat4(1.0f);
         model = glm::translate(model, glm::vec3(nd.pos.x, nd.pos.y + yloc, nd.pos.z));
-        float radius = 1.0f;
 
-        if (show_degree)
-        {
-            radius = min(nd.degree / 2.5, 1.5);
-        }
+        // Calculate radius based on node degree
+        float min_radius = 0.5f;
+        float max_radius = 2.5f;
+        float radius = min_radius + (max_radius - min_radius) * (float)nd.degree / max_degree;
 
         glm::vec3 scale = glm::vec3(radius, radius, radius);
         model = glm::scale(model, scale);
