@@ -1,6 +1,6 @@
 #include <iostream>
 #include <vector>
-#ifndef LINE_H
+#ifndef LINE
 #define LINE
 
 #include <glm/glm.hpp>
