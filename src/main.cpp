@@ -80,6 +80,9 @@ SolidSphere sphere(
     10.0f, 12, 24);
 Line line(glm::vec3(0, 0, 0), glm::vec3(0, 0, 0));
 
+// The graph is initialized with random nodes and edges
+// using a preferential attachment mechanism to mimic a scale-free graph
+// That is the structure of the world wide web: https://www.networksciencebook.com/chapter/4#scale-free
 void init_graph()
 {
     graph.adj_list.clear();
@@ -92,6 +95,58 @@ void init_graph()
         int n3 = graph.add_node();
         int rd = rand() % (graph.node_list.size());
         graph.add_edge(n3, rd);
+
+        // Use a preferential attachment mechanism to mimic a scale-free graph
+        int total_degree = 0;
+        for (const auto &node : graph.node_list)
+        {
+            total_degree += node.degree;
+        }
+
+        if (total_degree == 0)
+        {
+            // If no edges exist yet, connect to a random node
+            int rd = rand() % (graph.node_list.size());
+            graph.add_edge(n3, rd);
+        }
+        else
+        {
+            // Preferentially attach based on node degree
+            for (int j = 0; j < graph.node_list.size(); j++)
+            {
+                float probability = (float)graph.node_list[j].degree / total_degree;
+                if ((float)rand() / RAND_MAX < probability)
+                {
+                    graph.add_edge(n3, j);
+                }
+            }
+        }
+    }
+
+    // Ensure every node is reachable from any other node
+    for (int i = 0; i < graph.node_list.size(); i++)
+    {
+        std::unordered_set<int> visited;
+        std::function<void(int)> dfs = [&](int node) {
+            visited.insert(node);
+            for (int neighbor : graph.adj_list[node])
+            {
+                if (visited.find(neighbor) == visited.end())
+                {
+                    dfs(neighbor);
+                }
+            }
+        };
+
+        dfs(i);
+
+        for (int j = 0; j < graph.node_list.size(); j++)
+        {
+            if (visited.find(j) == visited.end())
+            {
+                graph.add_edge(i, j);
+            }
+        }
     }
 
     universe.set_graph(graph);
