@@ -8,7 +8,7 @@ add_subdirectory(deps/glm)
 
 # GLAD
 add_library(glad STATIC deps/glad/src/glad.c)
-target_include_directories(glad PUBLIC deps/glad/include deps/KHR/include)
+target_include_directories(glad PUBLIC deps/glad/include deps/KHR)
 
 # Sources
 add_executable(main
