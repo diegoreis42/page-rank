@@ -1,24 +1,32 @@
-cmake_minimum_required(VERSION 3.12)
+cmake_minimum_required(VERSION 3.15)
 project(OpenGLExample)
 
 set(CMAKE_CXX_STANDARD 17)
 
-# Add GLFW (already cloned into deps/)
 add_subdirectory(deps/glfw)
-
-# Add GLM (already cloned into deps/)
 add_subdirectory(deps/glm)
 
-# Add GLAD (header and glad.c manually copied)
-include_directories(deps/glad/include)
-include_directories(deps/KHR/include)
+# GLAD
 add_library(glad STATIC deps/glad/src/glad.c)
+target_include_directories(glad PUBLIC deps/glad/include deps/KHR/include)
 
-# Executable
-add_executable(main src/main.cpp)
+# Sources
+add_executable(main
+    src/main.cpp
+    src/camera.cpp
+    src/graph.cpp
+    src/node.cpp
+    src/universe.cpp
+    src/utils/draw/line.cpp
+    src/utils/draw/solid_sphere.cpp
+    src/utils/rgb.cpp
+    src/utils/vec3d.cpp
+)
+
+
+# Link
 target_link_libraries(main PRIVATE glad glfw glm)
 
-# For Linux: link with OpenGL and X11 dependencies
 if(UNIX)
   find_package(OpenGL REQUIRED)
   target_link_libraries(main PRIVATE ${OPENGL_LIBRARIES} dl pthread X11)
