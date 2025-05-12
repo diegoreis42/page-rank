@@ -9,4 +9,4 @@
 	url = https://github.com/nigels-com/glew.git
 [submodule "deps/imgui"]
 	path = deps/imgui
-	url = https://github.com/ocornut/imgui
+	url = https://github.com/diogo-ha/imgui
