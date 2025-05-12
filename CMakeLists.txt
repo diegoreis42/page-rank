@@ -5,6 +5,7 @@ set(CMAKE_CXX_STANDARD 17)
 
 add_subdirectory(deps/glfw)
 add_subdirectory(deps/glm)
+add_subdirectory(deps/imgui)
 
 # GLAD
 add_library(glad STATIC deps/glad/src/glad.c)
@@ -25,7 +26,7 @@ add_executable(main
 
 
 # Link
-target_link_libraries(main PRIVATE glad glfw glm)
+target_link_libraries(main PRIVATE glad glfw glm imgui)
 
 if(UNIX)
   find_package(OpenGL REQUIRED)

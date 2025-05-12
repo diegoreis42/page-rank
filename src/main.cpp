@@ -7,6 +7,9 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/glm.hpp>
+#include <imgui.h>
+#include <imgui_impl_glfw.h>
+#include <imgui_impl_opengl3.h>
 
 #include "camera.h"
 #include "universe.h"
@@ -203,8 +206,14 @@ void framebuffer_size_callback(GLFWwindow *window, int width, int height)
     camera.set_viewport(width, height);
 }
 
-std::function<void()> loop;
-void main_loop() { loop(); }
+void imgui_update_frame() 
+{
+    ImGui::Begin("Graph Viewer");
+    ImGui::Text("Example text");
+    if(ImGui::Button("Example Button"))
+        std::cout << "Clicked\n";
+    ImGui::End();
+}
 
 int main()
 {
@@ -218,6 +227,11 @@ int main()
     glfwSetErrorCallback(error_callback);
     if (!glfwInit())
         return EXIT_FAILURE;
+
+    // Set OpenGL Version
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+    glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
 
     window = glfwCreateWindow(WIN_WIDTH, WIN_HEIGHT, "Graph Viewer", NULL, NULL);
 
@@ -240,6 +254,23 @@ int main()
         return -1;
     }
 
+    // Init ImGui
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO(); (void)io;
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+    
+    
+    ImGui_ImplGlfw_InitForOpenGL(window, true); // Send GLFW context to ImGui
+    ImGui_ImplOpenGL3_Init("#version 300 es");  // Set ImGui OpenGL version
+
+    // Change ImGui default theme
+    ImGui::StyleColorsDark();
+    
+    // Disable ImGui config saving
+    ImGui::GetIO().IniFilename = NULL;
+    ImGui::GetIO().LogFilename = NULL;
+
     projection = glm::perspective(
         glm::radians<float>(60.0f), (GLfloat)WIN_WIDTH / (GLfloat)WIN_HEIGHT,
         0.1f, 500.0f);
@@ -257,7 +288,7 @@ int main()
     double currentTime = glfwGetTime();
     double startTime = glfwGetTime();
     double initTime = glfwGetTime();
-
+    
     while (!glfwWindowShouldClose(window))
     {
         timeSimulatedThisIteration = 0;
@@ -276,6 +307,15 @@ int main()
         }
 
         render();
+
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplGlfw_NewFrame();
+        ImGui::NewFrame();
+        
+        imgui_update_frame();
+
+        ImGui::Render();
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
         currentTime = glfwGetTime();
         timeAccumulator += currentTime - startTime;
