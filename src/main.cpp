@@ -89,7 +89,7 @@ void init_graph()
 
     for (int i = 0; i < n_random_nodes; i++)
     {
-        int n3 = graph.add_node("C");
+        int n3 = graph.add_node();
         int rd = rand() % (graph.node_list.size());
         graph.add_edge(n3, rd);
     }

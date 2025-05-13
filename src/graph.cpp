@@ -9,10 +9,10 @@ Graph::Graph()
     this->node_list.clear();
 }
 
-int Graph::add_node(string data)
+int Graph::add_node()
 {
     int new_node_id = adj_list.size();
-    Node new_node(new_node_id, data);
+    Node new_node(new_node_id);
 
     this->adj_list.push_back(unordered_set<int>());
     this->node_list.push_back(new_node);
