@@ -5,79 +5,67 @@
 
 using namespace std;
 Universe::Universe(Graph graph,
-    double dt,
-    double repulsion,
-    double spring_k,
-    double damping,
-    double gravity) :
-    graph{ graph },
-    dt{ dt },
-    repulsion{ repulsion },
-    spring_k{ spring_k },
-    damping{ damping },
-    gravity{ gravity },
-    n_iterations{ 0 }
+                   double dt,
+                   double repulsion,
+                   double spring_k,
+                   double damping,
+                   double gravity) : graph{graph},
+                                     dt{dt},
+                                     repulsion{repulsion},
+                                     spring_k{spring_k},
+                                     damping{damping},
+                                     gravity{gravity},
+                                     n_iterations{0}
 {
 }
 
-// Hooke's Law: F_spring = kx
-// Computes the force of n2 "pulling" on n1
-Vec3D Universe::compute_spring_force(Node n1, Node n2) {
-    return spring_k * (n2.pos - n1.pos);
-}
-Vec3D Universe::compute_spring_force_general(double k, Vec3D v1, Vec3D v2) {
+Vec3D Universe::compute_spring_force_general(double k, Vec3D v1, Vec3D v2)
+{
     return k * (v1 - v2);
 }
 
 // Coloumb's Law: F_repulsion = k (q1 * q2) / r^2
-Vec3D Universe::compute_repulsion_force(Node n1, Node n2) {
+Vec3D Universe::compute_repulsion_force(Node n1, Node n2)
+{
     double dist = Vec3D::distance(n1.pos, n2.pos);
-    return repulsion * (1 / pow(dist, 2.0)) * Vec3D(
-        (n1.pos.x - n2.pos.x),
-        (n1.pos.y - n2.pos.y),
-        (n1.pos.z - n2.pos.z)
-    );
+    return repulsion * (1 / pow(dist, 2.0)) * Vec3D((n1.pos.x - n2.pos.x), (n1.pos.y - n2.pos.y), (n1.pos.z - n2.pos.z));
 }
-void Universe::set_graph(Graph graph) {
+void Universe::set_graph(Graph graph)
+{
     this->graph = graph;
     this->graph.update_degrees();
     n_iterations = 0;
 }
 
-void Universe::update(double deltaT) {
+void Universe::update(double deltaT)
+{
     // Do Euler integration (O(n^2))
-    for (int i = 0; i < this->graph.adj_list.size(); i++) {
+    for (int i = 0; i < this->graph.adj_list.size(); i++)
+    {
 
-        Node& n1 = graph.node_list[i];
+        Node &n1 = graph.node_list[i];
         Vec3D f_spring = Vec3D::zero();
         Vec3D f_repulsion = Vec3D::zero();
 
 #pragma omp parallel for
-        for (int j = 0; j < this->graph.adj_list.size(); j++) {
-            if (i == j) {
+        for (int j = 0; j < this->graph.adj_list.size(); j++)
+        {
+            if (i == j)
+            {
                 continue;
             }
 
-            Node& n2 = graph.node_list[j];
+            Node &n2 = graph.node_list[j];
 
             // Apply a repulsion force
             f_repulsion = f_repulsion + compute_repulsion_force(n1, n2);
-
-            // Check if n1 and n2 are adjacent
-            // If so, apply a spring force on both of them
-            if (this->graph.adj_list[i].count(j)) {
-                // Apply spring force
-                f_spring = f_spring + compute_spring_force(n1, n2);
-            }
-
         }
 
-        // Optional: apply a "gravitational force", aka pull towards the origin 
+        // Optional: apply a "gravitational force", aka pull towards the origin
         f_spring = f_spring - compute_spring_force_general(gravity, n1.pos, Vec3D::zero());
 
         // Integrate laws of motion
         Vec3D f_net = f_spring + f_repulsion;
-
 
         // Compute acceleration
         // a = F_net/m
