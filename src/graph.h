@@ -20,7 +20,7 @@ public:
 
     // Add a new node to the graph
     // Returns the id of the newly added node
-    int add_node(string data);
+    int add_node();
 
     // Add an edge connecting node_1 and node_2
     void add_edge(int node_id_1, int node_id_2);

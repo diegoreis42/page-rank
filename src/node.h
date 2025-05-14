@@ -9,7 +9,6 @@ class Node
 {
 public:
     int id;
-    string data;
 
     Vec3D pos;
     Vec3D vel;
@@ -22,6 +21,6 @@ public:
     int degree;
     Rgb color;
 
-    Node(int _id, string _data);
+    Node(int _id);
 };
 #endif
