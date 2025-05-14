@@ -145,7 +145,6 @@ void draw_graph(float yloc)
     sphere.setColor(sphere.lightColor);
     sphere.setMVP(model, view, projection);
     sphere.draw();
-    
 }
 
 void render(void)
@@ -212,7 +211,6 @@ static void cursor_position_callback(GLFWwindow *window, double xpos, double ypo
 
 void scroll_callback(GLFWwindow *window, double xoffset, double yoffset)
 {
-    cout << "Scroll clicked" << endl;
     if (glm::distance(camera.pos, glm::vec3(0.0f)) > MIN_DISTANCE_ORIGIN)
     {
         camera.pos += (float)yoffset * scroll_sensitivity * camera.view_dir();
@@ -233,6 +231,7 @@ struct imgui_context
     bool last_frame_showing_about = false;
     ImVec2 steps_window_start_pos;
     bool showing_steps_window = true;
+    float light_pitch, light_yaw, z_rad;
 } imgui_context;
 
 void framebuffer_size_callback(GLFWwindow *window, int width, int height)
@@ -306,11 +305,46 @@ void imgui_update_frame()
     }
 
     ImGui::SetNextWindowSizeConstraints(ImVec2(400, 125), ImVec2(400, 550));
-    if (ImGui::Begin("Light Controller", nullptr, ImGuiWindowFlags_NoResize)) 
+    if (ImGui::Begin("Light Controller", nullptr, ImGuiWindowFlags_NoResize))
     {
-        ImGui::SliderFloat("Light Source Height", &sphere.lightPos.y, -15, 15, "Y = %.3f");
-        ImGui::SliderFloat3("Light Source Direction", &sphere.lightDirection.x, -1, 1, "%.3f");
+        ImGui::SetWindowCollapsed(true, ImGuiCond_FirstUseEver);
+        bool changed = ImGui::SliderFloat("Light Source Height", &sphere.lightPos.y, -15, 15, "Y = %.3f");
+        changed |= ImGui::SliderFloat3("Light Source Direction", &sphere.lightDirection.x, -1, 1, "%.3f");
+
+        if (changed)
+        {
+            imgui_context.light_pitch = asin(sphere.lightDirection.y);
+            imgui_context.light_yaw = atan2(sphere.lightDirection.x, sphere.lightDirection.z);
+        }
+
+        changed = ImGui::SliderAngle("Light Source Pitch", &imgui_context.light_pitch, -90, 90, "%.0f degrees");
+        changed |= ImGui::SliderAngle("Light Source Yaw", &imgui_context.light_yaw, -180, 180, "%.0f degrees");
+        if (changed)
+        {
+            glm::vec3 lightDir;
+            lightDir.x = cos(imgui_context.light_pitch) * sin(imgui_context.light_yaw);
+            lightDir.y = sin(imgui_context.light_pitch);
+            lightDir.z = cos(imgui_context.light_pitch) * cos(imgui_context.light_yaw);
+            sphere.lightDirection = glm::normalize(lightDir);
+        }
+
         ImGui::ColorPicker3("Light Color", &sphere.lightColor.r);
+    }
+    ImGui::End();
+
+    ImGui::SetNextWindowSizeConstraints(ImVec2(400, 125), ImVec2(400, 650));
+    if (ImGui::Begin("General Controller", nullptr, ImGuiWindowFlags_NoResize))
+    {
+        ImGui::SetWindowPos(ImVec2(500, 60), ImGuiCond_FirstUseEver);
+        ImGui::SetWindowCollapsed(true, ImGuiCond_FirstUseEver);
+        ImGui::SliderFloat("Repulsion", &universe.repulsion, 0, 15, "%.3f");
+        ImGui::SliderFloat("Gravity", &universe.gravity, 0, 15, "%.3f");
+        ImGui::SliderFloat("Spring", &universe.spring_k, 0, 15, "%.3f");
+        ImGui::SliderFloat("Damping", &universe.damping, 0, 15, "%.3f");
+        if (ImGui::Button("Reset Graph"))
+            init_graph();
+        ImGui::SameLine();
+        ImGui::Checkbox("Toggle Rotation", &autoRotateX);
     }
     ImGui::End();
 }
@@ -351,7 +385,7 @@ int main()
     // Set OpenGL Version
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
-    
+
     imgui_context.steps_window_start_pos = ImVec2(10, WIN_HEIGHT - 100);
     window = glfwCreateWindow(WIN_WIDTH, WIN_HEIGHT, "Graph Viewer", NULL, NULL);
 

@@ -5,17 +5,17 @@
 
 using namespace std;
 Universe::Universe(Graph graph,
-                   double dt,
-                   double repulsion,
-                   double spring_k,
-                   double damping,
-                   double gravity) : graph{graph},
-                                     dt{dt},
-                                     repulsion{repulsion},
-                                     spring_k{spring_k},
-                                     damping{damping},
-                                     gravity{gravity},
-                                     n_iterations{0}
+                   float dt,
+                   float repulsion,
+                   float spring_k,
+                   float damping,
+                   float gravity) : graph{graph},
+                                    dt{dt},
+                                    repulsion{repulsion},
+                                    spring_k{spring_k},
+                                    damping{damping},
+                                    gravity{gravity},
+                                    n_iterations{0}
 {
 }
 
@@ -26,7 +26,7 @@ Vec3D Universe::compute_spring_force(Node n1, Node n2)
     return spring_k * (n2.pos - n1.pos) * 0.2;
 }
 
-Vec3D Universe::compute_spring_force_general(double k, Vec3D v1, Vec3D v2)
+Vec3D Universe::compute_spring_force_general(float k, Vec3D v1, Vec3D v2)
 {
     return k * (v1 - v2);
 }
@@ -44,7 +44,7 @@ void Universe::set_graph(Graph graph)
     n_iterations = 0;
 }
 
-void Universe::update(double deltaT)
+void Universe::update(float deltaT)
 {
     // Do Euler integration (O(n^2))
     for (int i = 0; i < this->graph.adj_list.size(); i++)
