@@ -19,6 +19,13 @@ Universe::Universe(Graph graph,
 {
 }
 
+// Hooke's Law: F_spring = kx
+// Computes the force of n2 "pulling" on n1. Decress the force by 50%
+Vec3D Universe::compute_spring_force(Node n1, Node n2)
+{
+    return spring_k * (n2.pos - n1.pos) * 0.2;
+}
+
 Vec3D Universe::compute_spring_force_general(double k, Vec3D v1, Vec3D v2)
 {
     return k * (v1 - v2);
@@ -59,6 +66,14 @@ void Universe::update(double deltaT)
 
             // Apply a repulsion force
             f_repulsion = f_repulsion + compute_repulsion_force(n1, n2);
+
+            // Check if n1 and n2 are adjacent
+            // If so, apply a spring force on both of them
+            if (this->graph.adj_list[i].count(j))
+            {
+                // Apply spring force
+                f_spring = f_spring + compute_spring_force(n1, n2);
+            }
         }
 
         // Optional: apply a "gravitational force", aka pull towards the origin
