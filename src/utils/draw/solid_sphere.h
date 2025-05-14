@@ -20,6 +20,8 @@ protected:
     glm::mat4 projection = glm::mat4(1.0f);
     unsigned int VBO, VAO;
     glm::vec3 color = glm::vec3(1, 1, 1);
+    glm::vec3 lightColor = glm::vec3(1, 1, 1);
+    glm::vec3 lightPos = glm::vec3(10, 0, 0);
 
 public:
     SolidSphere(float radius, unsigned int rings, unsigned int sectors);
@@ -27,5 +29,9 @@ public:
     void init();
     void setMVP(glm::mat4x4 m, glm::mat4x4 v, glm::mat4x4 p);
     void setColor(glm::vec3 c);
+    void setLightColor(glm::vec3 c);
+    void setLightPos(glm::vec3 pos);
+    glm::vec3 getLightColor();
+    glm::vec3 getLightPos();
 };
 #endif

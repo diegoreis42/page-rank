@@ -115,7 +115,7 @@ void draw_graph(float yloc)
             line.draw();
         }
     }
-
+    sphere.setLightPos(glm::vec3(0, 12, 0));
     for (int i = 0; i < n_nodes; i++)
     {
         Node nd = universe.graph.node_list[i];
@@ -135,6 +135,17 @@ void draw_graph(float yloc)
         sphere.setMVP(model, view, projection);
         sphere.draw();
     }
+
+    // Render sphere light source
+    glm::mat4 model = glm::mat4(1.0f);
+    model = glm::translate(model, sphere.getLightPos());
+    float radius = 0.4f;
+    glm::vec3 scale = glm::vec3(radius, radius, radius);
+    model = glm::scale(model, scale);
+    sphere.setColor(sphere.getLightColor());
+    sphere.setMVP(model, view, projection);
+    sphere.draw();
+    
 }
 
 void render(void)
@@ -328,7 +339,7 @@ int main()
     // Set OpenGL Version
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
-    glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
+    
     imgui_context.steps_window_start_pos = ImVec2(10, WIN_HEIGHT - 100);
     window = glfwCreateWindow(WIN_WIDTH, WIN_HEIGHT, "Graph Viewer", NULL, NULL);
 
