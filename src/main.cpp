@@ -115,7 +115,7 @@ void draw_graph(float yloc)
             line.draw();
         }
     }
-    sphere.setLightPos(glm::vec3(0, 12, 0));
+
     for (int i = 0; i < n_nodes; i++)
     {
         Node nd = universe.graph.node_list[i];
@@ -138,11 +138,11 @@ void draw_graph(float yloc)
 
     // Render sphere light source
     glm::mat4 model = glm::mat4(1.0f);
-    model = glm::translate(model, sphere.getLightPos());
+    model = glm::translate(model, sphere.lightPos);
     float radius = 0.4f;
     glm::vec3 scale = glm::vec3(radius, radius, radius);
     model = glm::scale(model, scale);
-    sphere.setColor(sphere.getLightColor());
+    sphere.setColor(sphere.lightColor);
     sphere.setMVP(model, view, projection);
     sphere.draw();
     
@@ -239,6 +239,9 @@ void framebuffer_size_callback(GLFWwindow *window, int width, int height)
 {
     glViewport(0, 0, width, height);
     camera.set_viewport(width, height);
+    projection = glm::perspective(
+        glm::radians<float>(60.0f), (GLfloat)width / (GLfloat)height,
+        0.1f, 500.0f);
 }
 
 void imgui_update_frame()
@@ -301,6 +304,15 @@ void imgui_update_frame()
 
         ImGui::End();
     }
+
+    ImGui::SetNextWindowSizeConstraints(ImVec2(400, 125), ImVec2(400, 550));
+    if (ImGui::Begin("Light Controller", nullptr, ImGuiWindowFlags_NoResize)) 
+    {
+        ImGui::SliderFloat("Light Source Height", &sphere.lightPos.y, -15, 15, "Y = %.3f");
+        ImGui::SliderFloat3("Light Source Direction", &sphere.lightDirection.x, -1, 1, "%.3f");
+        ImGui::ColorPicker3("Light Color", &sphere.lightColor.r);
+    }
+    ImGui::End();
 }
 
 std::string get_current_executable_path()

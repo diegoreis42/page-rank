@@ -34,13 +34,14 @@ void SolidSphere::init()
                                        "out vec4 FragColor;\n"
                                        "in vec3 Normal;\n"
                                        "in vec3 FragPos;\n"
+                                       "uniform vec3 lightDirection;\n"
                                        "uniform vec3 lightPos;\n"
                                        "uniform vec3 lightColor;\n"
                                        "uniform vec3 objectColor;\n"
                                        "void main() {\n"
-                                       "   float ambientStrength = 0.1;\n"
+                                       "   float ambientStrength = 0.15;\n"
                                        "   vec3 ambient = ambientStrength * lightColor;\n"
-                                       "   vec3 norm = normalize(Normal);\n"
+                                       "   vec3 norm = normalize(lightDirection);\n"
                                        "   vec3 lightDir = normalize(lightPos - FragPos);\n"
                                        "   float diff = max(dot(norm, lightDir), 0.0);\n"
                                        "   vec3 diffuse = diff * lightColor;\n"
@@ -157,14 +158,9 @@ void SolidSphere::setLightPos(glm::vec3 pos)
     lightPos = pos;
 }
 
-glm::vec3 SolidSphere::getLightColor()
+void SolidSphere::setLightDirection(glm::vec3 dir)
 {
-    return this->lightColor;
-}
-
-glm::vec3 SolidSphere::getLightPos()
-{
-    return this->lightPos;
+    lightDirection = dir;
 }
 
 void SolidSphere::draw()
@@ -177,6 +173,7 @@ void SolidSphere::draw()
     glUniform3fv(glGetUniformLocation(this->shaderProgram, "objectColor"), 1, glm::value_ptr(this->color));
     glUniform3fv(glGetUniformLocation(this->shaderProgram, "lightColor"), 1, glm::value_ptr(this->lightColor));
     glUniform3fv(glGetUniformLocation(this->shaderProgram, "lightPos"), 1, glm::value_ptr(this->lightPos));
+    glUniform3f(glGetUniformLocation(this->shaderProgram, "lightDirection"), this->lightDirection.x*-1, this->lightDirection.y*-1, this->lightDirection.z*-1);
 
     glBindVertexArray(VAO);
     glDrawArrays(GL_TRIANGLE_STRIP, 0, vertices.size() / 3);
