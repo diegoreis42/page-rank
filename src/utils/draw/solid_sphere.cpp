@@ -16,44 +16,62 @@ SolidSphere::SolidSphere(float radius, unsigned int rings, unsigned int sectors)
 
 void SolidSphere::init()
 {
+    // Vertex shader source code
     const char *vertexShaderSource = "#version 330 core \n"
+                                     // Input vertex position at location 0
                                      "layout (location = 0) in vec3 aPos;\n"
+                                     // Input vertex normal at location 1
                                      "layout (location = 1) in vec3 aNormal;\n"
+                                     // Output to fragment shader: position in world space
                                      "out vec3 FragPos;\n"
+                                     // Output to fragment shader: normal vector
                                      "out vec3 Normal;\n"
+                                     // Model, view, and projection matrices as uniforms
                                      "uniform mat4 model;\n"
                                      "uniform mat4 view;\n"
                                      "uniform mat4 projection;\n"
                                      "void main()\n"
                                      "{\n"
+                                     // Transform vertex position to world space
                                      "   FragPos = vec3(model * vec4(aPos, 1.0));\n"
+                                     // Pass normal directly (should be transformed for non-uniform scale)
                                      "   Normal = aNormal;\n"
+                                     // Compute final vertex position in clip space
                                      "   gl_Position = projection * view * model * vec4(aPos, 1.0f);\n"
                                      "}\0";
+
+    // Fragment shader source code
     const char *fragmentShaderSource = "#version 330 core\n"
+                                       // Output color
                                        "out vec4 FragColor;\n"
+                                       // Input normal and position from vertex shader
                                        "in vec3 Normal;\n"
                                        "in vec3 FragPos;\n"
+                                       // Uniforms for lighting
                                        "uniform vec3 lightDirection;\n"
                                        "uniform vec3 lightPos;\n"
                                        "uniform vec3 lightColor;\n"
                                        "uniform vec3 viewPos;\n"
                                        "uniform vec3 objectColor;\n"
                                        "void main() {\n"
+                                       // Ambient lighting strength
                                        "   float ambientStrength = 0.15;\n"
+                                       // Ambient component
                                        "   vec3 ambient = ambientStrength * lightColor;\n"
+                                       // Normalize the light direction (note: should normalize normal instead)
                                        "   vec3 norm = normalize(lightDirection);\n"
+                                       // Direction from fragment to light source
                                        "   vec3 lightDir = normalize(lightPos - FragPos);\n"
+                                       // Diffuse component (Lambertian reflectance)
                                        "   float diff = max(dot(norm, lightDir), 0.0);\n"
                                        "   vec3 diffuse = diff * lightColor;\n"
-
+                                       // Combine ambient and diffuse, modulate by object color
                                        "   float specularStrength = 1;"
                                        "   vec3 viewDir = normalize(viewPos - FragPos);"
                                        "   vec3 reflectDir = reflect(-lightDir, norm);"
                                        "   float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32);"
                                        "   vec3 specular = specularStrength * spec * lightColor;  "
-
-                                       "   vec3 result = (ambient + diffuse + specular) * objectColor;\n"
+                                       "   vec3 result = (ambient + diffuse + specular) * objectColor;\n" // Output final color
                                        "   FragColor = vec4(result, 1.0);\n"
                                        "}\0";
 
@@ -181,7 +199,7 @@ void SolidSphere::draw()
     glUniform3fv(glGetUniformLocation(this->shaderProgram, "objectColor"), 1, glm::value_ptr(this->color));
     glUniform3fv(glGetUniformLocation(this->shaderProgram, "lightColor"), 1, glm::value_ptr(this->lightColor));
     glUniform3fv(glGetUniformLocation(this->shaderProgram, "lightPos"), 1, glm::value_ptr(this->lightPos));
-    glUniform3f(glGetUniformLocation(this->shaderProgram, "lightDirection"), this->lightDirection.x*-1, this->lightDirection.y*-1, this->lightDirection.z*-1);
+    glUniform3f(glGetUniformLocation(this->shaderProgram, "lightDirection"), this->lightDirection.x * -1, this->lightDirection.y * -1, this->lightDirection.z * -1);
     glUniform3fv(glGetUniformLocation(this->shaderProgram, "viewPos"), 1, glm::value_ptr(this->viewPos));
 
     glBindVertexArray(VAO);

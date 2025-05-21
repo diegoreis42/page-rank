@@ -2,6 +2,7 @@
 #include <iostream>
 #include "universe.h"
 #include "graph.h"
+#include "walker.h"
 
 using namespace std;
 Universe::Universe(Graph graph,
@@ -42,6 +43,37 @@ void Universe::set_graph(Graph graph)
     this->graph = graph;
     this->graph.update_degrees();
     n_iterations = 0;
+}
+
+void Universe::init_walkers()
+{
+    walkers.clear();
+    for (int i = 0; i < NUM_WALKERS; i++)
+    {
+        int random_node = rand() % graph.node_list.size();
+        walkers.push_back(Walker(random_node));
+    }
+}
+
+void Universe::update_walkers(float deltaT)
+{
+    for (Walker &walker : walkers)
+    {
+        walker.update(deltaT);
+
+        if (!walker.transitioning)
+        {
+            // Choose random neighbor
+            auto &neighbors = graph.adj_list[walker.current_node];
+            if (!neighbors.empty())
+            {
+                int random_idx = rand() % neighbors.size();
+                auto it = neighbors.begin();
+                std::advance(it, random_idx);
+                walker.move_to_node(*it);
+            }
+        }
+    }
 }
 
 void Universe::update(float deltaT)

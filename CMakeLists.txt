@@ -18,6 +18,7 @@ add_executable(main
     src/graph.cpp
     src/node.cpp
     src/universe.cpp
+    src/walker.cpp
     src/utils/draw/line.cpp
     src/utils/draw/solid_sphere.cpp
     src/utils/rgb.cpp
