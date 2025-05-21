@@ -3,6 +3,7 @@
 #include <string>
 #include "utils/vec3d.h"
 #include "utils/rgb.h"
+#include <glm/glm.hpp>
 using namespace std;
 
 class Node
@@ -14,7 +15,7 @@ public:
     Vec3D vel;
     Vec3D acc;
     double mass;
-    int radius;
+    float radius;
     double repulsion;
     double stiffness;
     double damping;
@@ -22,5 +23,10 @@ public:
     Rgb color;
 
     Node(int _id);
+
+    glm::vec3 get_glm_pos() const
+    {
+        return glm::vec3(pos.x, pos.y, pos.z);
+    }
 };
 #endif
