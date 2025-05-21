@@ -38,7 +38,7 @@ Graph graph;
 Camera camera(WIN_WIDTH, WIN_HEIGHT);
 
 double mouseScroll = 0;
-float scroll_sensitivity = 0.3f;
+float scroll_sensitivity = 1.0f;
 float zoom = 0.0f;
 bool mouseDown = false;
 bool mouseDownFirst = false;
