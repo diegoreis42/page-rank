@@ -59,7 +59,6 @@ float gravitational_force = 0.5f;
 float walker_update_interval = 2.0f;
 float walker_timer = 0.0f;
 
-const std::string EXPLANATION = "PageRank is a link analysis algorithm and it assigns a numerical weighting to each element of a hyperlinked set of documents, such as the World Wide Web, with the purpose of its relative importance within the set. The algorithm may be applied to any collection of entities with reciprocal quotations and references. The PageRank algorithm outputs a probability distribution used to represent the likelihood that a person randomly clicking on links will arrive at any particular page. PageRank can be calculated for collections of documents of any size. It is assumed in several research papers that the distribution is evenly divided among all documents in the collection at the beginning of the computational process. The PageRank computations require several passes, called 'iterations', through the collection to adjust approximate PageRank values to more closely reflect the theoretical true value. A probability is expressed as a numeric value between 0 and 1. A 0.5 probability is commonly expressed as a '1/2 chance' of something happening. Hence, a document with a PageRank of 0.5 means there is a 1/2 chance that a person clicking on a random link will be directed to said document. Assume a small universe of four web pages: A, B, C, and D. Links from a page to itself are ignored. Multiple outbound links from one page to another page are treated as a single link. PageRank is initialized to the same value for all pages. In the original form of PageRank, the sum of PageRank over all pages was the total number of pages on the web at that time, so each page in this example would have an initial value of 1. However, later versions of PageRank, and the remainder of this section, assume a probability distribution between 0 and 1. Hence the initial value for each page in this example is 0.25. The PageRank transferred from a given page to the targets of its outbound links upon the next iteration is divided equally among all outbound links.";
 const int LAST_STEP = 100; // only for testing, probably this won't be known at compile-time
 struct pagerank_step_context
 {
@@ -67,7 +66,6 @@ struct pagerank_step_context
     int total_steps = LAST_STEP;
 
     // could be a function that lazy-loads the description instead
-    std::vector<std::string> step_description;
 } step;
 
 struct imgui_context
@@ -420,23 +418,6 @@ void imgui_update_frame()
     }
     imgui_context.last_frame_showing_about = imgui_context.showing_about;
 
-    ImGui::SetNextWindowSizeConstraints(ImVec2(300, 125), ImVec2(300, 250));
-    if (imgui_context.showing_steps_window && ImGui::Begin("PageRank Step Descriptor", &imgui_context.showing_steps_window, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse))
-    {
-        ImGui::SetWindowPos(imgui_context.steps_window_start_pos, ImGuiCond_FirstUseEver);
-        ImGui::Text(std::format("Step: {}/{}", step.current_step, step.total_steps).c_str());
-        ImGui::TextWrapped(step.step_description[step.current_step].c_str());
-        ImGui::Dummy(ImVec2(0, 10));
-
-        if (ImGui::Button("Prev") && step.current_step > 0)
-            step.current_step--;
-        ImGui::SameLine();
-        if (ImGui::Button("Next") && step.current_step < step.total_steps)
-            step.current_step++;
-
-        ImGui::End();
-    }
-
     ImGui::SetNextWindowSizeConstraints(ImVec2(400, 125), ImVec2(400, 550));
     if (ImGui::Begin("Light Controller", nullptr, ImGuiWindowFlags_NoResize))
     {
@@ -503,10 +484,6 @@ std::string get_current_executable_path()
 int main()
 {
     srand(time(NULL));
-    // Only for testing, we'll have to do it another way!
-    step.step_description.resize(step.total_steps);
-    for (int i = 0; i < step.total_steps; i++)
-        step.step_description[i] = EXPLANATION.substr(rand() % (EXPLANATION.size() - 60), 60);
 
     cout << "### Starting Page Rank ###" << endl;
 
