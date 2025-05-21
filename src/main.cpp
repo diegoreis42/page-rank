@@ -70,6 +70,16 @@ struct pagerank_step_context
     std::vector<std::string> step_description;
 } step;
 
+struct imgui_context
+{
+    bool showing_about = false;
+    bool last_frame_showing_about = false;
+    ImVec2 steps_window_start_pos;
+    bool showing_steps_window = true;
+    float light_pitch, light_yaw, z_rad;
+    bool light_at_camera = false;
+} imgui_context;
+
 Universe universe(graph,
                   timeDelta,
                   repulsion_force,
@@ -172,6 +182,10 @@ void draw_graph(float yloc)
         }
     }
 
+    if(imgui_context.light_at_camera)
+        sphere.lightDirection = glm::normalize(camera.pos);
+
+    sphere.viewPos = camera.pos;
     // Find max degree for normalization
     int max_degree = 1;
     for (const auto &node : universe.graph.node_list)
@@ -198,15 +212,18 @@ void draw_graph(float yloc)
         sphere.draw();
     }
 
-    // Render sphere light source
-    glm::mat4 model = glm::mat4(1.0f);
-    model = glm::translate(model, sphere.lightPos);
-    float radius = 0.4f;
-    glm::vec3 scale = glm::vec3(radius, radius, radius);
-    model = glm::scale(model, scale);
-    sphere.setColor(sphere.lightColor);
-    sphere.setMVP(model, view, projection);
-    sphere.draw();
+    if (!imgui_context.light_at_camera)
+    {
+        // Render sphere light source
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::translate(model, sphere.lightPos);
+        float radius = 0.4f;
+        glm::vec3 scale = glm::vec3(radius, radius, radius);
+        model = glm::scale(model, scale);
+        sphere.setColor(sphere.lightColor);
+        sphere.setMVP(model, view, projection);
+        sphere.draw();
+    }
 }
 
 void render(void)
@@ -286,15 +303,6 @@ void scroll_callback(GLFWwindow *window, double xoffset, double yoffset)
 void mouse_button_callback(GLFWwindow *window, int button, int action, int mods)
 {
 }
-
-struct imgui_context
-{
-    bool showing_about = false;
-    bool last_frame_showing_about = false;
-    ImVec2 steps_window_start_pos;
-    bool showing_steps_window = true;
-    float light_pitch, light_yaw, z_rad;
-} imgui_context;
 
 void framebuffer_size_callback(GLFWwindow *window, int width, int height)
 {
@@ -377,6 +385,7 @@ void imgui_update_frame()
         {
             imgui_context.light_pitch = asin(sphere.lightDirection.y);
             imgui_context.light_yaw = atan2(sphere.lightDirection.x, sphere.lightDirection.z);
+            imgui_context.light_at_camera = false;
         }
 
         changed = ImGui::SliderAngle("Light Source Pitch", &imgui_context.light_pitch, -90, 90, "%.0f degrees");
@@ -388,8 +397,10 @@ void imgui_update_frame()
             lightDir.y = sin(imgui_context.light_pitch);
             lightDir.z = cos(imgui_context.light_pitch) * cos(imgui_context.light_yaw);
             sphere.lightDirection = glm::normalize(lightDir);
+            imgui_context.light_at_camera = false;
         }
 
+        ImGui::Checkbox("Light Source At Camera", &imgui_context.light_at_camera);
         ImGui::ColorPicker3("Light Color", &sphere.lightColor.r);
     }
     ImGui::End();

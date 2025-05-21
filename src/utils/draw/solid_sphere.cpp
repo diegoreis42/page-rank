@@ -37,6 +37,7 @@ void SolidSphere::init()
                                        "uniform vec3 lightDirection;\n"
                                        "uniform vec3 lightPos;\n"
                                        "uniform vec3 lightColor;\n"
+                                       "uniform vec3 viewPos;\n"
                                        "uniform vec3 objectColor;\n"
                                        "void main() {\n"
                                        "   float ambientStrength = 0.15;\n"
@@ -45,7 +46,14 @@ void SolidSphere::init()
                                        "   vec3 lightDir = normalize(lightPos - FragPos);\n"
                                        "   float diff = max(dot(norm, lightDir), 0.0);\n"
                                        "   vec3 diffuse = diff * lightColor;\n"
-                                       "   vec3 result = (ambient + diffuse) * objectColor;\n"
+
+                                       "   float specularStrength = 1;"
+                                       "   vec3 viewDir = normalize(viewPos - FragPos);"
+                                       "   vec3 reflectDir = reflect(-lightDir, norm);"
+                                       "   float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32);"
+                                       "   vec3 specular = specularStrength * spec * lightColor;  "
+
+                                       "   vec3 result = (ambient + diffuse + specular) * objectColor;\n"
                                        "   FragColor = vec4(result, 1.0);\n"
                                        "}\0";
 
@@ -174,6 +182,7 @@ void SolidSphere::draw()
     glUniform3fv(glGetUniformLocation(this->shaderProgram, "lightColor"), 1, glm::value_ptr(this->lightColor));
     glUniform3fv(glGetUniformLocation(this->shaderProgram, "lightPos"), 1, glm::value_ptr(this->lightPos));
     glUniform3f(glGetUniformLocation(this->shaderProgram, "lightDirection"), this->lightDirection.x*-1, this->lightDirection.y*-1, this->lightDirection.z*-1);
+    glUniform3fv(glGetUniformLocation(this->shaderProgram, "viewPos"), 1, glm::value_ptr(this->viewPos));
 
     glBindVertexArray(VAO);
     glDrawArrays(GL_TRIANGLE_STRIP, 0, vertices.size() / 3);
