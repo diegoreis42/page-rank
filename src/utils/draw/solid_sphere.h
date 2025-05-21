@@ -24,6 +24,7 @@ public:
     glm::vec3 lightPos = glm::vec3(0, 0, 0);
     glm::vec3 lightDirection = glm::vec3(0, -0.5, 0);
     glm::vec3 lightColor = glm::vec3(1, 1, 1);
+    glm::vec3 viewPos = glm::vec3(0, 0, 0);
     
     SolidSphere(float radius, unsigned int rings, unsigned int sectors);
     void draw();

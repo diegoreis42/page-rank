@@ -37,15 +37,12 @@ long int n_iterations = INT_FAST32_MAX;
 Graph graph;
 Camera camera(WIN_WIDTH, WIN_HEIGHT);
 
-double mouseX = 0;
-double mouseY = 0;
 double mouseScroll = 0;
 float scroll_sensitivity = 1.0f;
-float drag_sensitivity = 1.5;
 float zoom = 0.0f;
 bool mouseDown = false;
 bool mouseDownFirst = false;
-bool autoRotateX = true;
+bool autoRotateX = false;
 bool show_degree = true;
 float MIN_DISTANCE_ORIGIN = 5.0f;
 float zoom_step = 2.5f;
@@ -69,6 +66,16 @@ struct pagerank_step_context
     // could be a function that lazy-loads the description instead
     std::vector<std::string> step_description;
 } step;
+
+struct imgui_context
+{
+    bool showing_about = false;
+    bool last_frame_showing_about = false;
+    ImVec2 steps_window_start_pos;
+    bool showing_steps_window = true;
+    float light_pitch, light_yaw, z_rad;
+    bool light_at_camera = false;
+} imgui_context;
 
 Universe universe(graph,
                   timeDelta,
@@ -172,6 +179,10 @@ void draw_graph(float yloc)
         }
     }
 
+    if (imgui_context.light_at_camera)
+        sphere.lightDirection = glm::normalize(camera.pos);
+
+    sphere.viewPos = camera.pos;
     // Find max degree for normalization
     int max_degree = 1;
     for (const auto &node : universe.graph.node_list)
@@ -198,15 +209,18 @@ void draw_graph(float yloc)
         sphere.draw();
     }
 
-    // Render sphere light source
-    glm::mat4 model = glm::mat4(1.0f);
-    model = glm::translate(model, sphere.lightPos);
-    float radius = 0.4f;
-    glm::vec3 scale = glm::vec3(radius, radius, radius);
-    model = glm::scale(model, scale);
-    sphere.setColor(sphere.lightColor);
-    sphere.setMVP(model, view, projection);
-    sphere.draw();
+    if (!imgui_context.light_at_camera)
+    {
+        // Render sphere light source
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::translate(model, sphere.lightPos);
+        float radius = 0.4f;
+        glm::vec3 scale = glm::vec3(radius, radius, radius);
+        model = glm::scale(model, scale);
+        sphere.setColor(sphere.lightColor);
+        sphere.setMVP(model, view, projection);
+        sphere.draw();
+    }
 }
 
 void render(void)
@@ -230,19 +244,19 @@ static void key_callback(GLFWwindow *window, int key, int scancode, int action, 
         glfwSetWindowShouldClose(window, GLFW_TRUE);
     if (key == GLFW_KEY_W)
     {
-        camera.update_view_mat(0.1, 0);
+        camera.update_view_mat_auto(0.1, 0);
     }
     if (key == GLFW_KEY_S)
     {
-        camera.update_view_mat(-0.1, 0);
+        camera.update_view_mat_auto(-0.1, 0);
     }
     if (key == GLFW_KEY_A)
     {
-        camera.update_view_mat(0, 0.1);
+        camera.update_view_mat_auto(0, 0.1);
     }
     if (key == GLFW_KEY_D)
     {
-        camera.update_view_mat(0, -0.1);
+        camera.update_view_mat_auto(0, -0.1);
     }
     if (key == GLFW_KEY_R && action == GLFW_PRESS)
     {
@@ -250,24 +264,32 @@ static void key_callback(GLFWwindow *window, int key, int scancode, int action, 
     }
 }
 
+struct dragging_context
+{
+    bool dragging = false;
+    double lastMouseX, lastMouseY;
+    glm::vec3 lastCameraPos, lastCameraTargetPos;
+    double mouseX = 0;
+    double mouseY = 0;
+    float drag_sensitivity = 1;
+} dragging_context;
+
 static void cursor_position_callback(GLFWwindow *window, double xpos, double ypos)
 {
+    dragging_context.mouseX = xpos;
+    dragging_context.mouseY = ypos;
 
-    if (mouseDownFirst)
+    if (dragging_context.dragging)
     {
-        cout << "Mouse clicked" << endl;
-        mouseX = xpos;
-        mouseY = ypos;
-        mouseDownFirst = false;
-    }
+        double dx = (xpos - dragging_context.lastMouseX) * dragging_context.drag_sensitivity;
+        double dy = (ypos - dragging_context.lastMouseY) * dragging_context.drag_sensitivity;
 
-    if (mouseDown)
-    {
-        double dx = (xpos - mouseX) * drag_sensitivity;
-        double dy = (ypos - mouseY) * drag_sensitivity;
-        mouseX = xpos;
-        mouseY = ypos;
-        camera.update_view_mat(dx, dy);
+        camera.update_view_mat_mouse(dx, dy, dragging_context.lastCameraPos, dragging_context.lastCameraTargetPos);
+
+        dragging_context.lastMouseX = xpos;
+        dragging_context.lastMouseY = ypos;
+        dragging_context.lastCameraPos = camera.pos;
+        dragging_context.lastCameraTargetPos = camera.target_pos;
     }
 }
 
@@ -285,16 +307,29 @@ void scroll_callback(GLFWwindow *window, double xoffset, double yoffset)
 
 void mouse_button_callback(GLFWwindow *window, int button, int action, int mods)
 {
-}
+    if (button != 0)
+        return;
 
-struct imgui_context
-{
-    bool showing_about = false;
-    bool last_frame_showing_about = false;
-    ImVec2 steps_window_start_pos;
-    bool showing_steps_window = true;
-    float light_pitch, light_yaw, z_rad;
-} imgui_context;
+    ImGuiIO &io = ImGui::GetIO();
+    if(io.WantCaptureMouse) {
+        // Imgui is capturing mouse, so we shouldn't handle this input
+        dragging_context.dragging = false;
+        return;
+    }
+
+    if (action == 1)
+    {
+        dragging_context.lastMouseX = dragging_context.mouseX;
+        dragging_context.lastMouseY = dragging_context.mouseY;
+        dragging_context.lastCameraPos = camera.pos;
+        dragging_context.lastCameraTargetPos = camera.target_pos;
+        dragging_context.dragging = true;
+    }
+    else if (dragging_context.dragging && action == 0)
+    {
+        dragging_context.dragging = false;
+    }
+}
 
 void framebuffer_size_callback(GLFWwindow *window, int width, int height)
 {
@@ -377,6 +412,7 @@ void imgui_update_frame()
         {
             imgui_context.light_pitch = asin(sphere.lightDirection.y);
             imgui_context.light_yaw = atan2(sphere.lightDirection.x, sphere.lightDirection.z);
+            imgui_context.light_at_camera = false;
         }
 
         changed = ImGui::SliderAngle("Light Source Pitch", &imgui_context.light_pitch, -90, 90, "%.0f degrees");
@@ -388,8 +424,10 @@ void imgui_update_frame()
             lightDir.y = sin(imgui_context.light_pitch);
             lightDir.z = cos(imgui_context.light_pitch) * cos(imgui_context.light_yaw);
             sphere.lightDirection = glm::normalize(lightDir);
+            imgui_context.light_at_camera = false;
         }
 
+        ImGui::Checkbox("Light Source At Camera", &imgui_context.light_at_camera);
         ImGui::ColorPicker3("Light Color", &sphere.lightColor.r);
     }
     ImGui::End();
@@ -474,7 +512,6 @@ int main()
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGuiIO &io = ImGui::GetIO();
-    (void)io;
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
 
     ImGui_ImplGlfw_InitForOpenGL(window, true); // Send GLFW context to ImGui
@@ -528,7 +565,7 @@ int main()
 
         if (autoRotateX)
         {
-            camera.update_view_mat(2.5, 0);
+            camera.update_view_mat_auto(2.5, 0);
         }
 
         render();
