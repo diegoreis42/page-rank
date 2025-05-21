@@ -31,8 +31,13 @@ void Camera::set_viewport(int width, int height)
     viewport_height = (float)height;
 }
 
+void Camera::update_view_mat_auto(float dx, float dy)
+{
+    this->update_view_mat_mouse(dx, dy, this->pos, this->target_pos);
+}
+
 // From example here: https://asliceofrendering.com/camera/2019/11/30/ArcballCamera/
-void Camera::update_view_mat(float dx, float dy)
+void Camera::update_view_mat_mouse(float dx, float dy, glm::vec3 pos, glm::vec3 target_pos)
 {
     dx = dx * (2 * M_PI / viewport_width);
     dy = dy * (M_PI / viewport_height);
@@ -52,7 +57,7 @@ void Camera::update_view_mat(float dx, float dy)
     // Rotate around target point on second axis
     rotationMatrixY = glm::rotate(rotationMatrixY, dy, right_vector());
     glm::vec4 final_pos4 = (rotationMatrixY * (pos4 - target_pos4)) + target_pos4;
-    pos = glm::vec3(final_pos4[0], final_pos4[1], final_pos4[2]);
+    this->pos = glm::vec3(final_pos4[0], final_pos4[1], final_pos4[2]);
 
-    view_mat = glm::lookAt(pos, target_pos, up_vector());
+    view_mat = glm::lookAt(this->pos, target_pos, up_vector());
 }

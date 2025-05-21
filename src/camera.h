@@ -18,7 +18,8 @@ public:
     float viewport_height;
     Camera(int vh, int vw);
 
-    void update_view_mat(float dx, float dy);
+    void update_view_mat_auto(float dx, float dy);
+    void update_view_mat_mouse(float dx, float dy, glm::vec3 pos, glm::vec3 target_pos);
     glm::mat4x4 get_view_mat();
     glm::vec3 right_vector();
     glm::vec3 view_dir();
